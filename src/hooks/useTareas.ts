@@ -1,27 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import type { Tarea } from '../types';
 
 const STORAGE_KEY = 'mis_tareas';
 
+function cargarTareas(): Tarea[] {
+  try {
+    const guardadas = localStorage.getItem(STORAGE_KEY);
+    if (!guardadas) return [];
+
+    const tareas = JSON.parse(guardadas);
+    return Array.isArray(tareas) ? tareas : [];
+  } catch (error) {
+    console.error('Error al inicializar datos:', error);
+    return [];
+  }
+}
+
 export function useTareas() {
-  const [tareas, setTareas] = useState<Tarea[]>([]);
-  const isLoadedRef = useRef(false);
+  const [tareas, setTareas] = useState<Tarea[]>(cargarTareas);
 
   useEffect(() => {
-    try {
-      const guardadas = localStorage.getItem(STORAGE_KEY);
-      if (guardadas) {
-        setTareas(JSON.parse(guardadas));
-      }
-    } catch (error) {
-      console.error('Error al inicializar datos:', error);
-    } finally {
-      isLoadedRef.current = true;
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isLoadedRef.current) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(tareas));
     } catch (error) {

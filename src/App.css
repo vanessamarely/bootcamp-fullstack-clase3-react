@@ -1,3 +1,162 @@
+.task-app {
+  width: min(100% - 32px, 680px);
+  margin: 56px auto;
+  text-align: left;
+}
+
+.task-app__header {
+  margin-bottom: 28px;
+}
+
+.task-app__eyebrow {
+  color: #087f5b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.task-app h1 {
+  margin: 6px 0;
+  font-size: 2.5rem;
+  letter-spacing: 0;
+}
+
+.task-form,
+.task-controls {
+  display: flex;
+  gap: 12px;
+}
+
+.task-form {
+  margin-bottom: 20px;
+}
+
+.task-form input,
+.search-field input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  padding: 10px 12px;
+}
+
+.task-form input {
+  flex: 1;
+}
+
+button {
+  border: 1px solid #087f5b;
+  border-radius: 6px;
+  background: #087f5b;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 16px;
+}
+
+button:hover {
+  background: #056b4c;
+}
+
+.task-controls {
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.filter-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-list button {
+  border-color: var(--border);
+  background: transparent;
+  color: var(--text);
+  padding: 7px 10px;
+}
+
+.filter-list button.is-active {
+  border-color: #087f5b;
+  background: #e6fcf5;
+  color: #056b4c;
+}
+
+.search-field {
+  width: min(100%, 230px);
+}
+
+.task-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.task-list li {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-h);
+}
+
+.task-list label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+}
+
+.task-list input {
+  accent-color: #087f5b;
+  height: 18px;
+  width: 18px;
+}
+
+.task-list .is-complete span {
+  color: var(--text);
+  text-decoration: line-through;
+}
+
+.task-app__updating,
+.task-app__empty {
+  color: #087f5b;
+  font-size: 0.9rem;
+  margin: 0 0 12px;
+}
+
+.sr-only {
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 620px) {
+  .task-app {
+    margin: 32px auto;
+  }
+
+  .task-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .search-field {
+    width: 100%;
+  }
+}
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;

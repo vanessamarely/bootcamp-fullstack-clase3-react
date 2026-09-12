@@ -1,125 +1,120 @@
-import { useState, useEffect, useRef } from 'react'
-import './App.css'
-// import type { Tarea, Filtro } from './types';
+import { useDeferredValue, useEffect, useState, useTransition } from 'react';
+import './App.css';
 import { useTareas } from './hooks/useTareas';
 import type { Filtro } from './types';
 
-// const STORAGE_KEY = 'mis_tareas';
+const filtros: { valor: Filtro; etiqueta: string }[] = [
+  { valor: 'todas', etiqueta: 'Todas' },
+  { valor: 'pendientes', etiqueta: 'Pendientes' },
+  { valor: 'completadas', etiqueta: 'Completadas' },
+];
 
 function App() {
-  // const [tareas, setTareas] = useState<Tarea[]>([]);
-  // const [filtro, setFiltro] = useState<Filtro>('todas');
-  // const [titulo, setTitulo] = useState('');
-  // const isLoadedRef = useRef(false);
-
   const { tareas, agregarTarea, alternarTarea } = useTareas();
   const [filtro, setFiltro] = useState<Filtro>('todas');
   const [titulo, setTitulo] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+  const [isPending, startTransition] = useTransition();
+  const busquedaDiferida = useDeferredValue(busqueda);
 
-
-
-  // // 1. Carga inicial asíncrona al montar el componente (previene Hydration Mismatches)
-  // useEffect(() => {
-  //   try {
-  //     const guardadas = localStorage.getItem(STORAGE_KEY);
-  //     if (guardadas) {
-  //       setTareas(JSON.parse(guardadas));
-  //     }
-  //   } catch (error) {
-  //     console.error('Error al leer de localStorage:', error);
-  //   } finally {
-  //     isLoadedRef.current = true;
-  //   }
-  // }, []);
-
-  // // 2. Persistencia continua: solo escribe si ya se cargaron los datos existentes
-  // useEffect(() => {
-  //   if (!isLoadedRef.current) return;
-
-  //   try {
-  //     localStorage.setItem(STORAGE_KEY, JSON.stringify(tareas));
-  //     const pendientes = tareas.filter((t) => !t.completada).length;
-  //     document.title = `Pendientes: ${pendientes}`;
-  //   } catch (error) {
-  //     console.error('Error al guardar en localStorage:', error);
-  //   }
-  // }, [tareas]); // Solo se dispara cuando el arreglo 'tareas' cambia
-
-  // const agregarTarea = (titulo: string) => {
-  //   const textoLimpio = titulo.trim();
-  //   if (!textoLimpio) return;
-
-  //   const nueva: Tarea = { id: Date.now(), titulo: textoLimpio, completada: false };
-  //   setTareas((prev) => [...prev, nueva]);
-  // };
-
-  // const alternarTarea = (id: number) => {
-  //   setTareas((prev) =>
-  //     prev.map((t) => (t.id === id ? { ...t, completada: !t.completada } : t))
-  //   );
-  // };
-
-  // // Dato derivado calculado directamente en el cuerpo de la función sin useEffect redundante
-  // const tareasVisibles = tareas.filter((t) => {
-  //   if (filtro === 'pendientes') return !t.completada;
-  //   if (filtro === 'completadas') return t.completada;
-  //   return true;
-  // });
-
-  // Efecto que permanece en la vista: document.title es un detalle de presentación de esta pantalla
   useEffect(() => {
-    const pendientes = tareas.filter((t) => !t.completada).length;
+    const pendientes = tareas.filter((tarea) => !tarea.completada).length;
     document.title = `Pendientes: ${pendientes}`;
   }, [tareas]);
 
-  const tareasVisibles = tareas.filter((t) => {
-    if (filtro === 'pendientes') return !t.completada;
-    if (filtro === 'completadas') return t.completada;
-    return true;
+  const tareasVisibles = tareas.filter((tarea) => {
+    const coincideFiltro =
+      filtro === 'todas' ||
+      (filtro === 'pendientes' && !tarea.completada) ||
+      (filtro === 'completadas' && tarea.completada);
+    const coincideBusqueda = tarea.titulo
+      .toLowerCase()
+      .includes(busquedaDiferida.trim().toLowerCase());
+
+    return coincideFiltro && coincideBusqueda;
   });
 
+  const cambiarFiltro = (nuevoFiltro: Filtro) => {
+    startTransition(() => {
+      setFiltro(nuevoFiltro);
+    });
+  };
+
+  const enviarTarea = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!titulo.trim()) return;
+
+    agregarTarea(titulo);
+    setTitulo('');
+  };
 
   return (
-    <> <main style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: 450, margin: '0 auto' }}>
-      <h1>Mis Tareas ({tareas.length})</h1>
+    <main className="task-app">
+      <header className="task-app__header">
+        <p className="task-app__eyebrow">Gestor de tareas</p>
+        <h1>Mis tareas</h1>
+        <p>{tareas.length} tareas en total</p>
+      </header>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          agregarTarea(titulo);
-          setTitulo('');
-        }}
-      >
+      <form className="task-form" onSubmit={enviarTarea}>
+        <label className="sr-only" htmlFor="nueva-tarea">Nueva tarea</label>
         <input
+          id="nueva-tarea"
           value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
+          onChange={(event) => setTitulo(event.target.value)}
           placeholder="Nueva tarea..."
         />
         <button type="submit">Agregar</button>
       </form>
 
-      <div style={{ margin: '15px 0' }}>
-        <button onClick={() => setFiltro('todas')}>Todas</button>
-        <button onClick={() => setFiltro('pendientes')}>Pendientes</button>
-        <button onClick={() => setFiltro('completadas')}>Completadas</button>
-      </div>
+      <section className="task-controls" aria-label="Filtros y búsqueda">
+        <div className="filter-list" role="group" aria-label="Filtrar tareas">
+          {filtros.map(({ valor, etiqueta }) => (
+            <button
+              className={filtro === valor ? 'is-active' : ''}
+              key={valor}
+              onClick={() => cambiarFiltro(valor)}
+              type="button"
+            >
+              {etiqueta}
+            </button>
+          ))}
+        </div>
+        <label className="search-field" htmlFor="buscar-tareas">
+          <span className="sr-only">Buscar tareas</span>
+          <input
+            id="buscar-tareas"
+            value={busqueda}
+            onChange={(event) => setBusqueda(event.target.value)}
+            placeholder="Buscar tareas..."
+          />
+        </label>
+      </section>
 
-      <ul>
-        {tareasVisibles.map((t) => (
-          <li key={t.id}>
-            <input
-              type="checkbox"
-              checked={t.completada}
-              onChange={() => alternarTarea(t.id)}
-            />
-            {t.titulo}
+      {(isPending || busquedaDiferida !== busqueda) && (
+        <p className="task-app__updating" aria-live="polite">Actualizando resultados...</p>
+      )}
+
+      <ul className="task-list" aria-busy={isPending || busquedaDiferida !== busqueda}>
+        {tareasVisibles.map((tarea) => (
+          <li className={tarea.completada ? 'is-complete' : ''} key={tarea.id}>
+            <label>
+              <input
+                checked={tarea.completada}
+                onChange={() => alternarTarea(tarea.id)}
+                type="checkbox"
+              />
+              <span>{tarea.titulo}</span>
+            </label>
           </li>
         ))}
       </ul>
-    </main>
 
-    </>
-  )
+      {tareasVisibles.length === 0 && (
+        <p className="task-app__empty">No hay tareas que coincidan con los filtros.</p>
+      )}
+    </main>
+  );
 }
 
-export default App
+export default App;
